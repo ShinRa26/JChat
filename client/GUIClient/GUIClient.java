@@ -1,10 +1,5 @@
 import javax.swing.*;
 import javax.swing.UIManager.*;
-import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.nimbus.AbstractRegionPainter;
-import javax.swing.UIDefaults.*;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
