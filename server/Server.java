@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 
+// TODO: Add Echo Handler!
 public class Server
 {
     private static ServerSocket server;
@@ -57,7 +58,7 @@ public class Server
         {
             try
             {
-                this.writer.write("[ECHO]: " + msg + '\n');
+                this.writer.write(msg + '\n');
                 this.writer.flush();
             }
             catch(IOException e){}

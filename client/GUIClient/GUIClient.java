@@ -1,17 +1,23 @@
 import javax.swing.*;
 import javax.swing.UIManager.*;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.nimbus.AbstractRegionPainter;
+import javax.swing.UIDefaults.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.event.*;
+
+import java.io.IOException;
 
 public class GUIClient extends JFrame implements KeyListener, ActionListener
 {
-    private String chatDisplayName;
-    // private ClientLogic client;
+    public String chatDisplayName;
+    private ClientLogic client;
     
     private JButton enter;
     private JPanel displayPanel, textPanel;
@@ -20,12 +26,22 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
 
     public GUIClient()
     {
-        // this.chatDisplayName = getChatDisplayName();
+        this.chatDisplayName = getChatDisplayName();
+        this.client = new ClientLogic(this);
+        try
+        {
+            this.client.connect();
+            this.client.start();
+        }
+        catch(IOException e){displayConnectionError();}
 
         setTitle("JChat");
-        setSize(600, 400);
+        setSize(650, 450);
         setLocation(500,200);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        customCloseOperation();
+
         placeComponents();
         setResizable(false);
         setVisible(true);
@@ -40,8 +56,6 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         this.chatDisplay = new JTextPane();
         this.chatDisplay.setPreferredSize(new Dimension(550, 300));
         this.chatDisplay.setEditable(false);
-        setChatDisplayAttributes();
-
         this.chatScroll = new JScrollPane(this.chatDisplay);
 
         this.textEntry = new JTextPane();
@@ -67,11 +81,6 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         add(this.textPanel, BorderLayout.SOUTH);
     }
 
-    // Sets the attributes for the Chat Display
-    private void setChatDisplayAttributes()
-    {
-        // TODO: Fix color!
-    }
 
     // Gets the chat name for the user
     private String getChatDisplayName()
@@ -97,12 +106,58 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         return name;
     }
 
+    // Connection Error
+    private void displayConnectionError()
+    {
+        JOptionPane.showMessageDialog(null, "Error on connecting to server.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+        System.exit(1);
+    }
+
+    // Custom close operations
+    private void customCloseOperation()
+    {
+        addWindowListener(new WindowListener() {
+            @Override
+            public void windowDeactivated(WindowEvent e){}
+
+            @Override
+            public void windowActivated(WindowEvent e){}
+
+            @Override
+            public void windowDeiconified(WindowEvent e){}
+
+            @Override
+            public void windowIconified(WindowEvent e){}
+
+            @Override
+            public void windowClosed(WindowEvent e){}
+
+            @Override
+            public void windowOpened(WindowEvent e){}
+
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                try
+                {
+                    client.close();
+                    System.exit(0);
+                }
+                catch(IOException x){}
+            }
+        });
+    }
+
     // Button Pressed
     public void actionPerformed(ActionEvent e)
     {
         if(e.getSource() == this.enter)
         {
-            System.exit(0);
+            try
+            {
+                this.client.sendMessage();
+            }
+            catch(IOException x){}
         }
     }
 
@@ -111,6 +166,8 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
     public void keyPressed(KeyEvent e){}
     public void keyReleased(KeyEvent e){}
 
+
+    // Main Method!
     public static void main(String[] args)
     {
         try
