@@ -1,11 +1,14 @@
 import java.net.*;
 import java.io.*;
+
+import javax.swing.SwingUtilities;
 import javax.swing.text.*;
 
-public class ClientLogic extends Thread
+public class ClientLogic
 {
     private GUIClient gui;
     private String name;
+    private ClientEchoHandler clientEH;
 
     private Socket client;
     private BufferedReader reader;
@@ -26,6 +29,9 @@ public class ClientLogic extends Thread
         this.client = new Socket(host, port);
         this.reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
         this.writer = new BufferedWriter(new OutputStreamWriter(this.client.getOutputStream()));
+
+        this.clientEH = new ClientEchoHandler(this.client, this.gui);
+        this.clientEH.start();
     }
 
     // Closes the socket and exits "gracefully"
@@ -46,25 +52,45 @@ public class ClientLogic extends Thread
         this.gui.textEntry.setText("");
     }
 
-    // Thread for reading messages from the server
-    public void run()
-    {
-        String recv = "";
-        StyledDocument doc;
 
-        try
+    /**
+     * Class for handling the echo commands form the server
+     */
+    private static class ClientEchoHandler extends Thread
+    {
+        private Socket client;
+        private GUIClient gui;
+        private BufferedReader reader;
+
+        public ClientEchoHandler(Socket c, GUIClient g)
         {
-            while((recv = this.reader.readLine()) != null)
+            try
             {
-                // this.gui.chatDisplay.getText();
-                try
-                {
-                    doc = this.gui.chatDisplay.getStyledDocument();
-                    doc.insertString(doc.getLength(), '\n' + recv, null);
-                }
-                catch(Exception e){}
+                this.client = c;
+                this.gui = g;
+                this.reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
             }
+            catch(IOException e){} // TODO: Add error for failing to launch the echo handler
         }
-        catch(IOException e){}
+
+        public void run()
+        {
+            String recv = "";
+            StyledDocument doc;
+
+            try
+            {
+                while((recv = this.reader.readLine()) != null)
+                {
+                    try
+                    {
+                        doc = this.gui.chatDisplay.getStyledDocument();
+                        doc.insertString(doc.getLength(), '\n' + recv, null);
+                    }
+                    catch(Exception e){}
+                }
+            }
+            catch(IOException e){}
+        }
     }
 }

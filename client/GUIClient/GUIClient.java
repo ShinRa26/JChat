@@ -1,5 +1,8 @@
 import javax.swing.*;
 import javax.swing.UIManager.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -26,7 +29,6 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         try
         {
             this.client.connect();
-            this.client.start();
         }
         catch(IOException e){displayConnectionError();}
 
@@ -51,6 +53,7 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         this.chatDisplay = new JTextPane();
         this.chatDisplay.setPreferredSize(new Dimension(550, 300));
         this.chatDisplay.setEditable(false);
+        this.chatDisplay.setText("Welcome to JChat!\n\n");
         this.chatScroll = new JScrollPane(this.chatDisplay);
 
         this.textEntry = new JTextPane();
@@ -90,6 +93,13 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
                 if(name.length() == 0)
                 {
                     JOptionPane.showMessageDialog(null, "Enter a valid name!", "Invalid Name", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+
+                String[] splitName = name.split(" ");
+                if(splitName.length > 1)
+                {
+                    JOptionPane.showMessageDialog(null, "No spaces in names!", "Invalid Name", JOptionPane.WARNING_MESSAGE);
                     continue;
                 }
 

@@ -1,4 +1,6 @@
 import java.net.*;
+import java.util.ArrayList;
+import java.util.*;
 import java.io.*;
 
 // TODO: Add Echo Handler!
@@ -6,6 +8,7 @@ public class Server
 {
     private static ServerSocket server;
     private static int port = 9000;
+    private static EchoHandler eh = new EchoHandler();
 
     public static void main(String[] args)
     {
@@ -13,10 +16,13 @@ public class Server
         {
             server = new ServerSocket(port);
             System.out.println("Server online!\nListening on port: " + server.getLocalPort());
+
             while(true)
             {
-                Handler h = new Handler(server.accept());
+                Socket client = server.accept();
+                Handler h = new Handler(client);
                 h.start();
+                eh.addClient(client);
             }
         }
         catch(IOException e) {System.out.println("Unable to conenct to server: Server offline.");}
@@ -32,7 +38,7 @@ public class Server
         {
             this.client = c;
             this.reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            this.writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+            // this.writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
         }
 
         public void run()
@@ -45,23 +51,83 @@ public class Server
                 while((recv = reader.readLine()) != null)
                 {
                     System.out.println("[RECV]: " + recv);
-                    writeMsg(recv);
+                    // writeMsg(recv);
+                    eh.echo(recv);
                 }
 
                 System.out.println("Client Disconnected: " + this.client.getInetAddress() + ":" + this.client.getPort() + '\n');
+                eh.removeClient(this.client);
                 this.client.close();
             }
             catch(IOException e){}
         }
 
-        private void writeMsg(String msg)
+        // private void writeMsg(String msg)
+        // {
+        //     try
+        //     {
+        //         this.writer.write(msg + '\n');
+        //         this.writer.flush();
+        //     }
+        //     catch(IOException e){}
+        // }
+    }
+
+    /**
+     * Class for echoing other commands to the other clients
+     */
+    private static class EchoHandler
+    {
+        private List<Socket> clients;
+
+        public EchoHandler()
         {
-            try
+            this.clients = new ArrayList<Socket>();
+        }
+
+        // Add a client to the list
+        public void addClient(Socket c)
+        {
+            this.clients.add(c);
+        }
+
+        // Remove a client from the list
+        public void removeClient(Socket c)
+        {
+            Iterator<Socket> iter = this.clients.iterator();
+            while(iter.hasNext())
             {
-                this.writer.write(msg + '\n');
-                this.writer.flush();
+                Socket client = iter.next();
+                if(c == client)
+                {
+                    iter.remove();
+                    break;
+                }
             }
-            catch(IOException e){}
+            // for(Socket client : this.clients)
+            // {
+            //     if(c == client)
+            //     {
+            //         this.clients.remove(client);
+            //     }
+            // }
+        }
+
+        // Echo a message to all clients
+        public void echo(String msg)
+        {
+            BufferedWriter writer;
+
+            for(Socket client : this.clients)
+            {
+                try
+                {
+                    writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+                    writer.write(msg + '\n');
+                    writer.flush();
+                }
+                catch(IOException e){}
+            }
         }
     }
 }
