@@ -38,7 +38,6 @@ public class Server
         {
             this.client = c;
             this.reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            // this.writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
         }
 
         public void run()
@@ -50,8 +49,10 @@ public class Server
             {
                 while((recv = reader.readLine()) != null)
                 {
-                    System.out.println("[RECV]: " + recv);
-                    // writeMsg(recv);
+                    if(recv.length() == 0 || recv.equals(""))
+                        continue;
+
+                    System.out.println(recv);
                     eh.echo(recv);
                 }
 
@@ -61,16 +62,6 @@ public class Server
             }
             catch(IOException e){}
         }
-
-        // private void writeMsg(String msg)
-        // {
-        //     try
-        //     {
-        //         this.writer.write(msg + '\n');
-        //         this.writer.flush();
-        //     }
-        //     catch(IOException e){}
-        // }
     }
 
     /**
@@ -104,20 +95,15 @@ public class Server
                     break;
                 }
             }
-            // for(Socket client : this.clients)
-            // {
-            //     if(c == client)
-            //     {
-            //         this.clients.remove(client);
-            //     }
-            // }
         }
 
         // Echo a message to all clients
         public void echo(String msg)
         {
-            BufferedWriter writer;
+            if(msg.length() == 0 || msg.equals(""))
+                return;
 
+            BufferedWriter writer;
             for(Socket client : this.clients)
             {
                 try

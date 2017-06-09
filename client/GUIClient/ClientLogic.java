@@ -17,6 +17,7 @@ public class ClientLogic
     private final String host = "127.0.0.1";
     private final int port = 9000;
 
+
     public ClientLogic(GUIClient g)
     {
         this.gui = g;
@@ -37,19 +38,70 @@ public class ClientLogic
     // Closes the socket and exits "gracefully"
     public void close() throws IOException
     {
+        leftChat();
         this.client.close();
     }
 
     // Send a message to the server
-    public void sendMessage() throws IOException
+    public void sendMessage(String msg, int flag) throws IOException
     {
-        String msg = this.gui.textEntry.getText();
-        String msgWithName = ("[" + this.name + "]: " + msg);
+        if(isMessageEmpty(msg, flag))
+            return;
+        /**
+         * Flag is for the server.
+         * Flag 0 means that the message will be displayed with the client's username
+         * Flag 1 means the server will print the message w/o username
+         */
+        switch(flag)
+        {
+            case 0:
+                String msgWithName = ("[" + this.name + "]: " + msg);
+                this.writer.write(msgWithName + '\n');
+                this.writer.flush();
+                break;
+            case 1:
+                this.writer.write(msg + '\n');
+                this.writer.flush();
+                break;
+            default:
+                break;
+        }
+        
+    }
 
-        this.writer.write(msgWithName + '\n');
-        this.writer.flush();
+    // Message for client joining the chat
+    public void joinedChat() throws IOException
+    {
+        String joined = String.format("%s has joined the server.\n", this.name);
+        sendMessage(joined, 1);
+    }
 
-        this.gui.textEntry.setText("");
+    // Message for client leaving the chat
+    public void leftChat() throws IOException
+    {
+        String left = String.format("%s has left the server.\n", this.name);
+        sendMessage(left, 1);
+    }
+
+    // Checks if the sent message is empty, null, non-existant, new-line, jesus etc.
+    private boolean isMessageEmpty(String msg, int flag)
+    {
+        // Messages for the server don't count!
+        if(flag == 1)
+            return false;
+
+        if(msg.equals("") || msg == null || msg.length() == 0)
+            return true;
+
+        // Checks for new line at start of msg
+        // String[] split = msg.split(":");
+        // System.out.println("Split: " + split[0]);
+        // char[] strippedMsg = split[1].toCharArray();
+
+        // if(strippedMsg[0] == 10)
+        //     return true;
+
+        return false;
     }
 
 
@@ -86,6 +138,7 @@ public class ClientLogic
                     {
                         doc = this.gui.chatDisplay.getStyledDocument();
                         doc.insertString(doc.getLength(), '\n' + recv, null);
+                        this.gui.scrollToBottom();
                     }
                     catch(Exception e){}
                 }

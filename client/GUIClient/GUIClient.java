@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.UIManager.*;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -8,9 +9,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.*;
 
 import java.io.IOException;
+import java.util.concurrent.RunnableFuture;
 
 public class GUIClient extends JFrame implements KeyListener, ActionListener
 {
@@ -24,24 +27,25 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
 
     public GUIClient()
     {
-        this.chatDisplayName = getChatDisplayName();
-        this.client = new ClientLogic(this);
         try
         {
+            this.chatDisplayName = getChatDisplayName();
+            this.client = new ClientLogic(this);
             this.client.connect();
+
+            setTitle("JChat");
+            setSize(650, 450);
+            setLocation(500,200);
+
+            setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+            customCloseOperation();
+
+            placeComponents();
+            setResizable(false);
+            this.client.joinedChat();
+            setVisible(true);
         }
         catch(IOException e){displayConnectionError();}
-
-        setTitle("JChat");
-        setSize(650, 450);
-        setLocation(500,200);
-
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        customCloseOperation();
-
-        placeComponents();
-        setResizable(false);
-        setVisible(true);
     }
 
     // Initialises the components
@@ -58,8 +62,7 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
 
         this.textEntry = new JTextPane();
         this.textEntry.setPreferredSize(new Dimension(477, 75));
-        // Add Keyboard Listener here
-        
+        this.textEntry.addKeyListener(this);
         this.textScroll = new JScrollPane(this.textEntry);
 
         this.enter = new JButton("Send");
@@ -153,14 +156,37 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
         });
     }
 
+    // Scroll to bottom of Chat Display
+    public void scrollToBottom()
+    {
+        javax.swing.SwingUtilities.invokeLater(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
+                    int endPosition = chatDisplay.getDocument().getLength();
+                    Rectangle bottom = chatDisplay.modelToView(endPosition);
+                    chatDisplay.scrollRectToVisible(bottom);
+                }
+                catch(Exception e){}
+            }
+        });
+    }
+
     // Button Pressed
     public void actionPerformed(ActionEvent e)
     {
         if(e.getSource() == this.enter)
         {
+            String msg = this.textEntry.getText();
+            if(msg.equals("") || msg.length() == 0)
+                return;
+
             try
             {
-                this.client.sendMessage();
+                this.client.sendMessage(msg, 0);
+                this.textEntry.setText("");
             }
             catch(IOException x){}
         }
@@ -169,7 +195,22 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
     // Key Presses
     public void keyTyped(KeyEvent e){}
     public void keyPressed(KeyEvent e){}
-    public void keyReleased(KeyEvent e){}
+    public void keyReleased(KeyEvent e)
+    {
+        if(e.getKeyCode() == KeyEvent.VK_ENTER)
+        {
+            String msg = this.textEntry.getText();
+            if(msg.equals("") || msg.length() == 0)
+                return;
+
+            try
+            {
+                this.client.sendMessage(msg, 0);
+                this.textEntry.setText("");
+            }
+            catch(IOException x){}
+        }
+    }
 
 
     // Main Method!
