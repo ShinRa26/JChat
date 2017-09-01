@@ -3,18 +3,19 @@ import java.util.ArrayList;
 import java.util.*;
 import java.io.*;
 
-// TODO: Add Echo Handler!
 public class Server
 {
     private static ServerSocket server;
-    private static int port = 9000;
+    private static final int PORT = 9000;
+    private static final String IPADDRESS = "130.209.221.132";
+    private static final int BACKLOG = 50;
     private static EchoHandler eh = new EchoHandler();
 
     public static void main(String[] args)
     {
         try
         {
-            server = new ServerSocket(port);
+            server = new ServerSocket(PORT, BACKLOG, InetAddress.getByName(IPADDRESS));
             System.out.println("Server online!\nListening on port: " + server.getLocalPort());
 
             while(true)

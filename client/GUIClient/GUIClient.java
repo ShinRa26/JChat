@@ -18,6 +18,7 @@ import java.util.concurrent.RunnableFuture;
 public class GUIClient extends JFrame implements KeyListener, ActionListener
 {
     public String chatDisplayName;
+    public String serverIP;
     private ClientLogic client;
     
     private JButton enter;
@@ -29,7 +30,9 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
     {
         try
         {
-            this.chatDisplayName = getChatDisplayName();
+            String[] nameAndIP = getChatDisplayName();
+            this.chatDisplayName = nameAndIP[0];
+            this.serverIP = nameAndIP[1];
             this.client = new ClientLogic(this);
             this.client.connect();
 
@@ -84,12 +87,15 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
 
 
     // Gets the chat name for the user
-    private String getChatDisplayName()
+    private String[] getChatDisplayName()
     {
         String name = "";
+        String ip = "";
+        String[] nameAndIP = new String[2];
         while(true)
         {
             name = JOptionPane.showInputDialog(null, "Enter Chat Name: ", "Chat Name", JOptionPane.INFORMATION_MESSAGE);
+            ip = JOptionPane.showInputDialog(null, "Enter Server IP: ", "Server IP", JOptionPane.INFORMATION_MESSAGE);
 
             try
             {
@@ -110,8 +116,9 @@ public class GUIClient extends JFrame implements KeyListener, ActionListener
             }
             catch(NullPointerException e){System.exit(0);}
         }
-
-        return name;
+        nameAndIP[0] = name;
+        nameAndIP[1] = ip;
+        return nameAndIP;
     }
 
     // Connection Error

@@ -8,6 +8,7 @@ public class ClientLogic
 {
     private GUIClient gui;
     private String name;
+    private String serverIP;
     private ClientEchoHandler clientEH;
 
     private Socket client;
@@ -22,12 +23,13 @@ public class ClientLogic
     {
         this.gui = g;
         this.name = this.gui.chatDisplayName;
+        this.serverIP = this.gui.serverIP;
     }
 
     // Connect to the server
     public void connect() throws IOException
     {
-        this.client = new Socket(host, port);
+        this.client = new Socket(this.serverIP, port);
         this.reader = new BufferedReader(new InputStreamReader(this.client.getInputStream()));
         this.writer = new BufferedWriter(new OutputStreamWriter(this.client.getOutputStream()));
 
